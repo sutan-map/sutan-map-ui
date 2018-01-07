@@ -7,8 +7,8 @@
     <meta name="description" content="Information about various Bhatt Peoples from Bihar">
     <meta name="author" content="Bhatt Family">
 
-    <!-- SB TODO need to add icons -->
-    <link rel="icon" href="../../../../favicon.ico">
+    <!-- SB TODO need to add icons
+    <link rel="icon" href="../../../../favicon.ico"> -->
 
     <title>Bhatt Samaj from Bihar</title>
 
@@ -77,6 +77,7 @@
                   infowindow.open(map, marker);
                 });
             }
+
           </script>
           <script async defer
           src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCH8vlMRPUaBGTcs6kq5Vh4R0bZFATroN0&callback=initMap">
@@ -118,9 +119,70 @@
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
+
+    <script>
+      $(document).ready(function(){
+        $.get('https://sutan-map-api-https-sutan.1d35.starter-us-east-1.openshiftapps.com/api/people', function(data, status){
+          //refreshMap(data);
+          var peopleGroups = groupByLatLong(data);
+          refreshMapForPeopleGroups(peopleGroups);
+        })
+      });
+
+      function groupByLatLong(peoples){
+        var peopleGroups = {};
+        peoples.forEach(function(people){
+          var lat = people.lat;
+          var lng = people.lng;
+          var key = ''+lat+'-'+lng;
+          var peopleGroup = peopleGroups[key];
+          if(!peopleGroup){
+            peopleGroups[key] = peopleGroup = {};
+          }
+          peopleGroup.lat = lat;
+          peopleGroup.lng = lng;
+          var groupPeoples = peopleGroup['peoples'];
+          if(!groupPeoples){
+            groupPeoples = peopleGroup['peoples'] = [];
+          }
+          groupPeoples.push(people);
+        });
+        return peopleGroups;
+      }
+
+      function refreshMapForPeopleGroups(peopleGroups){
+        var keys = Object.keys(peopleGroups);
+        for (var i = 0; i < keys.length; i++) {
+          var peopleGroup = peopleGroups[keys[i]];
+          var pgTitle = "";
+          var note = "";
+          peopleGroup['peoples'].forEach(function(people){
+              pgTitle+=''+people.name+'('+people.nativeVillage+'),';
+              note+= people.name+' : '+people.note+'<BR/>';
+          });
+          var marker = new google.maps.Marker({
+            position: {lat: peopleGroup.lat, lng: peopleGroup.lng},
+            map: map,
+            title: pgTitle
+          });
+          createInfoWindow(marker, note, peopleGroup.lat, peopleGroup.lng);
+        }
+      }
+
+      function createInfoWindow(marker, note, lat, lng){
+        var infowindow = new google.maps.InfoWindow({
+            content: note+' <a href="https://www.google.com/maps/dir/?api=1&'+lat+','+lng+'" target="_blank"> Show route </a>'
+          });
+          marker.addListener('click', function() {
+            infowindow.open(map, marker);
+          });
+
+      }
+
+    </script>
 
   </body>
 </html>
